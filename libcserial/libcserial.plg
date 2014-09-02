@@ -1,0 +1,45 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: libcserial - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\Users\ADMINI~1\AppData\Local\Temp\RSPA861.tmp" with contents
+[
+/nologo /MLd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "AE_WINDOWS" /Fp"Debug/libcserial.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ  /c 
+"D:\xqlu-libs\libcserial\libcserial.c"
+"D:\xqlu-libs\libcserial\AeThread.c"
+]
+Creating command line "cl.exe @C:\Users\ADMINI~1\AppData\Local\Temp\RSPA861.tmp" 
+Creating temporary file "C:\Users\ADMINI~1\AppData\Local\Temp\RSPA871.tmp" with contents
+[
+kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:yes /pdb:"Debug/libcserial.pdb" /debug /machine:I386 /out:"Debug/libcserial.exe" /pdbtype:sept 
+".\Debug\libcserial.obj"
+".\Debug\AeThread.obj"
+]
+Creating command line "link.exe @C:\Users\ADMINI~1\AppData\Local\Temp\RSPA871.tmp"
+<h3>Output Window</h3>
+Compiling...
+libcserial.c
+AeThread.c
+d:\xqlu-libs\libcserial\libcserial.c(15) : warning C4716: 'CSerial_Create' : must return a value
+d:\xqlu-libs\libcserial\libcserial.c(26) : warning C4716: 'CSerial_Set_UserData' : must return a value
+d:\xqlu-libs\libcserial\libcserial.c(31) : warning C4716: 'CSerial_Set_Destroy_CallBack' : must return a value
+d:\xqlu-libs\libcserial\libcserial.c(37) : warning C4716: 'CSerial_Open' : must return a value
+d:\xqlu-libs\libcserial\libcserial.c(42) : warning C4716: 'CSerial_IsOpen' : must return a value
+d:\xqlu-libs\libcserial\libcserial.c(47) : warning C4716: 'CSerial_Close' : must return a value
+d:\xqlu-libs\libcserial\libcserial.c(54) : warning C4716: 'CSerial_Start_Loop' : must return a value
+d:\xqlu-libs\libcserial\libcserial.c(60) : warning C4716: 'CSerial_Set_Proc_CallBack' : must return a value
+d:\xqlu-libs\libcserial\libcserial.c(66) : warning C4716: 'CSerial_Read' : must return a value
+d:\xqlu-libs\libcserial\libcserial.c(71) : warning C4716: 'CSerial_Write' : must return a value
+Linking...
+
+
+
+<h3>Results</h3>
+libcserial.exe - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>
