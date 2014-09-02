@@ -35,13 +35,19 @@
 #include <dlfcn.h>
 #endif
 
+#ifdef AE_WINDOWS
+#define AE_STRDUP           _strdup
+#define AE_SNPRINTF     	_snprintf
+#define AE_SLEEP(sec)		Sleep(((DWORD)(sec))*((DWORD)1000))
+#else
+#define AE_STRDUP           strdup
+#define AE_SNPRINTF         snprintf
+#define AE_SLEEP(sec)		sleep((sec))
+#endif
+
+
 #include "AeThread.h"
 #include "libcserial.h"
 
-#ifdef AE_WINDOWS
-#define AE_SLEEP(sec)		Sleep(((DWORD)(sec))*((DWORD)1000))
-#else
-#define AE_SLEEP(sec)		sleep((sec))
-#endif
 
 #endif //_LIB_INCLUDE_H_
