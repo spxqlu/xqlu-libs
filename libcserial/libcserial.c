@@ -124,7 +124,16 @@ char CSerial_Get_Parity(struct CSerialPort* pSerial)
 
 int CSerial_Set_UserData(_PCSerial* pSerial, void *pData)
 {
-	pSerial->cBase->userData = pData;
+	int ret = 1;
+	if( pData ){
+		pSerial->cBase->userData = pData;
+	}
+	else{
+		ret = 0;
+		perror("set null pointer to userData.");
+	}
+	
+	return ret;
 }
 
 void* CSerial_Get_UserData(struct CSerialPort *pSerial)
@@ -134,7 +143,16 @@ void* CSerial_Get_UserData(struct CSerialPort *pSerial)
 
 int CSerial_Set_Destroy_CallBack(_PCSerial* pSerial, CSDestroyUserDataCb func)
 {
-	pSerial->cBase->CSerial_Destroy_UserData = func;
+	int ret = 1;
+	if( func ){
+		pSerial->cBase->CSerial_Destroy_UserData = func;
+	}
+	else{
+		ret = 0;
+		perror("set null pointer to CSerial_Destroy_UserData.");
+	}
+
+	return ret;
 }
 
 
@@ -164,20 +182,35 @@ int CSerial_Close(_PCSerial* pSerial)
 	CloseHandle(pSerial->hComm);
 
 #else
+	pSerial->cBase->bThreadRun = 0;
 	close(pSerial->fd);
 #endif
+
+	return 1;
 }
 
-//线程里面的数据处理回调函数，每次调用传递一个字符处理
 int CSerial_Set_Proc_CallBack(_PCSerial* pSerial, CSProcCb func)
 {
-	pSerial->cBase->CSerial_Proc_Char = func;
+	int ret = 1;
+	if( func ){
+		pSerial->cBase->CSerial_Proc_Char = func;
+	}
+	else{
+		ret = 0;
+		perror("set null pointer to CSerial_Proc_Char.");
+	}
+	
+	return ret;
 }
 
 
 int CSerial_Read(_PCSerial* pSerial, char* buf, int size)
 {
-	
+#ifdef AE_WINDOWS
+	return CSerial_Read_Syn(pSerial, buf, size);
+#else
+	return CSerial_Read_Char(pSerial, buf, size);
+#endif
 }
 
 int CSerial_Write(_PCSerial* pSerial, char* buf, int size)

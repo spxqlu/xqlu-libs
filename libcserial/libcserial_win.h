@@ -45,6 +45,7 @@ extern "C"{
 		int CSerial_Write_Syn(_PCSerial* pSerial, char* buf, unsigned int size);
 		int CSerial_Write_Asy(_PCSerial* pSerial, char* buf, unsigned int size);
 		int CSerial_Write_Char(_PCSerial *pSerial);
+		int CSerial_Read_Syn(_PCSerial *pSerial, char* buf, unsigned int size);
 		int CSerial_Read_Char(_PCSerial *pSerial, COMSTAT comstat);
 	
 #ifdef __cplusplus

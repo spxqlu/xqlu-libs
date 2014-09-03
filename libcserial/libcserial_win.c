@@ -107,7 +107,7 @@ int  CSerial_Open_Port(_PCSerial *pSerial)
 	if( CMODE_ASY == pSerial->cBase->mode ){
 		if( !Ae_Thread_Start(&pSerial->cBase->hThread, NULL,CSerial_Loop,pSerial) ){
 			pSerial->cBase->state = CSTATE_OFF;
-			//log	
+			perror("start asynchronous thread failed. \n");	
 		}
 	}
 	
@@ -139,6 +139,67 @@ void CSerial_Destroy_Port(_PCSerial *pSerial)
 	DeleteCriticalSection(&pSerial->csCommunicationSync);
 }
 
+int CSerial_Read_Syn(_PCSerial *pSerial, char* buf, unsigned int size)
+{
+	BOOL  bRead     = TRUE; 
+	BOOL  bResult   = TRUE;
+	DWORD dwError   = 0;
+	DWORD BytesRead = 0;
+	
+	EnterCriticalSection(&pSerial->csCommunicationSync);
+	
+	if (bRead)
+	{
+		bResult = ReadFile(pSerial->hComm,	// Handle to COMM port 
+			              buf,				// RX Buffer Pointer
+			              size,				// Read bytes
+			              &BytesRead,		// Stores number of bytes read
+			              &pSerial->stOv);	// pointer to the m_ov structure
+		// deal with the error code 
+		if (!bResult)  
+		{ 
+			switch (dwError = GetLastError()) 
+			{ 
+			case ERROR_IO_PENDING: 	
+				{ 
+					// asynchronous i/o is still in progress 
+					// Proceed on to GetOverlappedResults();
+					bRead = FALSE;
+					break;
+				}
+			default:
+				{
+					// Another error has occured.  Process this error.
+					//pSerial->ProcessErrorMessage("ReadFile()");
+					break;
+				} 
+			}
+		}
+		else
+		{
+			// ReadFile() returned complete. It is not necessary to call GetOverlappedResults()
+			bRead = TRUE;
+		}
+	}  // close if (bRead)
+	
+	if (!bRead)
+	{
+		bRead = TRUE;
+		bResult = GetOverlappedResult(pSerial->hComm,	// Handle to COMM port 
+			                          &pSerial->stOv,	// Overlapped structure
+			                          &BytesRead,		// Stores number of bytes read
+			                          TRUE); 			// Wait flag
+		
+		// deal with the error code 
+		if (!bResult)  {
+			//pSerial->ProcessErrorMessage("GetOverlappedResults() in ReadFile()");
+		}	
+	}  // close if (!bRead)
+	
+	LeaveCriticalSection(&pSerial->csCommunicationSync);
+
+	return BytesRead;
+}
 
 int  CSerial_Read_Char(_PCSerial *pSerial, COMSTAT comstat)
 {
@@ -148,7 +209,6 @@ int  CSerial_Read_Char(_PCSerial *pSerial, COMSTAT comstat)
 	DWORD BytesRead = 0;
 	char  RXBuff[2] = {0};
 
-	//	LIB_LOG("SerialPort",ILOG_PRIORITY_DEBUG,"enter function ReceiveChar");
 	for (;;) 
 	{ 
 		// Gain ownership of the comm port critical section.

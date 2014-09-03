@@ -30,7 +30,7 @@ int  CSerial_Init_Port(_PCSerial *pSerial)
     struct termios options;  
        
     if( tcgetattr( fd, &options ) != 0 ){  
-         perror("SetupSerial 1");      
+         perror("get com opthons failed. \n");      
          return CRET_ERR;   
     }  
     
@@ -79,7 +79,7 @@ int  CSerial_Init_Port(_PCSerial *pSerial)
               options.c_cflag |= CS8;  
               break;    
        default:     
-              fprintf(stderr,"Unsupported data size\n");  
+              fprintf(stderr,"unsupported data size.\n");  
               return CRET_ERR;   
     }  
     //设置校验位  
@@ -107,7 +107,7 @@ int  CSerial_Init_Port(_PCSerial *pSerial)
                  options.c_cflag &= ~CSTOPB;  
                  break;   
         default:    
-                 fprintf(stderr,"Unsupported parity\n");      
+                 fprintf(stderr,"unsupported parity. \n");      
                  return CRET_ERR;   
     }   
     // 设置停止位   
@@ -118,7 +118,7 @@ int  CSerial_Init_Port(_PCSerial *pSerial)
        case 2 :     
                 options.c_cflag |= CSTOPB; break;  
        default:     
-                fprintf(stderr,"Unsupported stop bits\n");   
+                fprintf(stderr,"unsupported stop bits. \n");   
                 return CRET_ERR;  
     }  
      
@@ -132,12 +132,12 @@ int  CSerial_Init_Port(_PCSerial *pSerial)
     options.c_cc[VTIME] = 1; /* 读取一个字符等待1*(1/10)s */    
     options.c_cc[VMIN] = 1; /* 读取字符的最少个数为1 */  
      
-    //如果发生数据溢出，接收数据，但是不再读取 刷新收到的数据但是不读  
+    //如果发生数据溢出，接收数据，但是不再读取 刷新收到的数据，但是不读  
     tcflush(fd,TCIFLUSH);  
      
-    //激活配置 (将修改后的termios数据设置到串口中）  
+    //Active configuration. (set termios data configuration which be changed.)  
     if (tcsetattr(fd,TCSANOW,&options) != 0){  
-        perror("com set error!\n");    
+        perror("com set options error! \n");    
         return CRET_ERR;   
     }  
 
@@ -149,17 +149,14 @@ int  CSerial_Open_Port(_PCSerial *pSerial)
 {
 	pSerial->fd = open( pSerial->cBase->port, O_RDWR|O_NOCTTY|O_NDELAY);  
 	if ( 0 == pSerial->fd )  {  
-		perror("Can't Open Serial Port");  
+		perror("open serial port failed. \n");  
 		return CRET_ERR;  
 	}  
 	//恢复串口为阻塞状态                                 
 	if( fcntl(pSerial->fd, F_SETFL, 0) < 0 )  {  
-		printf("fcntl failed!\n");  
+		printf("fcntl failed! \n");  
 		return CRET_ERR;  
-	}       
-	else  {  
-		printf("fcntl=%d\n",fcntl(pSerial->fd, F_SETFL,0));  
-	}  
+	}
 	//测试是否为终端设备      
 	if( 0 == isatty(STDIN_FILENO) ) {  
 		printf("standard input is not a terminal device\n");  
@@ -167,7 +164,14 @@ int  CSerial_Open_Port(_PCSerial *pSerial)
 	}  
 	else  {  
 		printf("isatty success!\n");  
-	}                
+	}
+	
+	if( CMODE_ASY == pSerial->cBase->mode ){
+		if( !Ae_Thread_Start(&pSerial->cBase->hThread, NULL,CSerial_Loop,pSerial) ){
+			pSerial->cBase->state = CSTATE_OFF;
+			perror("start asynchronous thread failed. \n");	
+		}
+	}
   
 	return CRET_OK;  
 }
@@ -181,48 +185,56 @@ void CSerial_Destroy_Port(_PCSerial *pSerial)
 
 int CSerial_Write_Char(_PCSerial* pSerial, char* buf, int size)
 {
-	int len = 0;  
-	
-    len = write(pSerial->fd, buf, size);  
-    if (len == size )  
-	{  
+	int len = write(pSerial->fd, buf, size);  
+    if( len == size )  {  
 		return len;  
 	}       
-    else     
-	{  
+    else{  
 		tcflush(fd,TCOFLUSH);  
-		return FALSE; 
+		return CRET_ERR; 
 	}  
 }
 
 int CSerial_Read_Char(_PCSerial* pSerial, char* buf, int size)
 {
-	int len,fs_sel;  
-    fd_set rFs;  
-	
+	int len = 0, ret = 0;  
+    fd_set rFs; 
     struct timeval ts;  
 	
     FD_ZERO(&rFs);  
     FD_SET(fd,&rFs);  
 	
-    ts.tv_sec = 10;  
+    ts.tv_sec  = 3;  
     ts.tv_usec = 0;  
 	
-    //使用select实现串口的多路通信  
-    fs_sel = select(pSerial->fd+1,&rFs,NULL,NULL,&ts);  
-    if(fs_sel)  
-	{  
-		len = read(pSerial->fd,buf,size);  
-		 
-		return len;  
+    ret = select(pSerial->fd+1,&rFs,NULL,NULL,&ts);  
+    if( ret > 0 ){
+		memset(pSerial->cBase->chReadBuf, 0, BUF_4K);
+		len = read(pSerial->fd,pSerial->cBase->chReadBuf, BUF_4K);  
+		if( CMODE_ASY == pSerial->cBase->mode ){
+			int i = 0;
+			if( pSerial->cBase->CSerial_Proc_Char ){
+				for( i=0; i<len; i++ ){
+					pSerial->cBase->CSerial_Proc_Char(pSerial, pSerial->cBase->chReadBuf[i]);
+				}
+			}
+			else{
+				perror("com asynchronous mode, but no process function! \n");
+			}
+		}
+		else if( CMODE_SYN == pSerial->cBase->mode ){
+			size = size > BUF_4K ? BUF_4K : size;
+			memcpy(buf,pSerial->cBase->chReadBuf, size);	
+		}
 	}  
-    else  
-	{  
-		
-		return FALSE;  
+    else if( ret == 0 ){ 
+		//nothing to do  
     } 
+	else{
+		perror("select error. \n");
+	}
 
-
+	return len;
 }
 
 void* CSerial_Loop(void* pData)
@@ -235,11 +247,11 @@ void* CSerial_Loop(void* pData)
 
 	pSerial->cBase->bThreadRun = 1;
 
-	while ( pSerial->cBase->bThreadRun ) //循环读取数据  
-	{    
-		
-
-		 
+	while ( pSerial->cBase->bThreadRun ){    
+		int len = CSerial_Read_Char(pSerial, pSerial->cBase->chReadBuf, BUF_4K);
+		if( len ){
+			//log data
+		}
     }
 	
 	return 0;
