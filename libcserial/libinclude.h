@@ -47,6 +47,14 @@
 
 
 #include "AeThread.h"
+#include "libcserial_kernel.h"
+
+#ifdef AE_WINDOWS
+#include "libcserial_win.h"
+#else
+#include "libcserial_linux.h"
+#endif
+
 #include "libcserial.h"
 
 

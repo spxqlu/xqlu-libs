@@ -92,6 +92,14 @@ SOURCE=.\AeThread.c
 
 SOURCE=.\libcserial.c
 # End Source File
+# Begin Source File
+
+SOURCE=.\libcserial_linux.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\libcserial_win.c
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -103,6 +111,18 @@ SOURCE=.\AeThread.h
 # Begin Source File
 
 SOURCE=.\libcserial.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\libcserial_kernel.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\libcserial_linux.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\libcserial_win.h
 # End Source File
 # Begin Source File
 
