@@ -4,6 +4,17 @@
 #define _LIB_INCLUDE_H_
 
 
+#ifdef AE_WINDOWS
+#	ifdef ITASK_EXPORT
+#		define ITASK_API __declspec(dllexport)
+#	else
+#		define ITASK_API __declspec(dllimport)
+#	endif
+#else
+#	define ITASK_API
+#endif
+
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -33,6 +44,7 @@
 #include <netdb.h>
 #include <iconv.h>
 #include <dlfcn.h>
+#include <termios.h>
 #endif
 
 #ifdef AE_WINDOWS

@@ -31,6 +31,7 @@ int  CSerial_Init_Port(_PCSerial *pSerial)
 {
 	int ret = CRET_OK;
 	char szBaud[BUF_1K] = {0};
+	char comBuf[BUF_256B] = {0};
 
 	pSerial->dwCommEvents = EV_RXCHAR | EV_CTS;
 	
@@ -45,7 +46,8 @@ int  CSerial_Init_Port(_PCSerial *pSerial)
 		pSerial->cBase->parity, pSerial->cBase->dataBit, pSerial->cBase->stopBit);
 	
 	// get a handle to the port
-	pSerial->hComm = CreateFileA(pSerial->cBase->port,	// communication port string (COMX)
+	AE_SNPRINTF(comBuf, BUF_256B, "\\\\.\\%s", pSerial->cBase->port);
+	pSerial->hComm = CreateFileA(comBuf,	// communication port string (COMX)
 		       GENERIC_READ | GENERIC_WRITE,	// read/write types
 		       0,								// comm devices must be opened with exclusive access
 		       NULL,							// no security attributes
@@ -54,6 +56,8 @@ int  CSerial_Init_Port(_PCSerial *pSerial)
 		       0);							// template must be 0 for comm devices
 	
 	if ( INVALID_HANDLE_VALUE == pSerial->hComm ){
+		// release critical section
+		LeaveCriticalSection(&pSerial->csCommunicationSync);
 		return CSTATE_OFF;
 	}
 	
@@ -348,17 +352,15 @@ int  CSerial_Write_Char(_PCSerial *pSerial)
 				}
 			}
 
-			if( pSerial->cBase->writeBufCount > BUF_1K - BUF_256B ){
-				memset(pSerial->cBase->chWriteBuf, 0, BUF_1K);	
+			if( pSerial->cBase->writeBufCount > BUF_4K - BUF_256B ){
+				memset(pSerial->cBase->chWriteBuf, 0, BUF_4K);	
 				pSerial->cBase->writeBufCount = 0;
 			}
 		} 
-		else
-		{
-			memset(pSerial->cBase->chWriteBuf, 0, BUF_1K);	
-			pSerial->cBase->writeBufCount = 0;	
-			LeaveCriticalSection(&pSerial->csCommunicationSync);
-		}
+		
+		memset(pSerial->cBase->chWriteBuf, 0, BUF_4K);	
+		pSerial->cBase->writeBufCount = 0;	
+		
 	} // end if(bWrite)
 	
 	if (!bWrite)
@@ -385,12 +387,14 @@ int  CSerial_Write_Char(_PCSerial *pSerial)
 int CSerial_Write_Asy(_PCSerial* pSerial, char* buf, unsigned int size)
 {
 	int ret = 1;
-	if( size > BUF_1K - BUF_32B ){
+
+	EnterCriticalSection(&pSerial->csCommunicationSync);
+	if( size > BUF_4K - BUF_32B ){
 		//log write data is too long
 		ret = 0;
 	}
-	else if( pSerial->cBase->writeBufCount < BUF_1K - size ){
-		memcpy(pSerial->cBase->chWriteBuf, buf, size);
+	else if( pSerial->cBase->writeBufCount < BUF_4K - size ){
+		memcpy(pSerial->cBase->chWriteBuf+pSerial->cBase->writeBufCount, buf, size);
 		pSerial->cBase->writeBufCount += size;
 		
 		// set event for write
@@ -400,6 +404,7 @@ int CSerial_Write_Asy(_PCSerial* pSerial, char* buf, unsigned int size)
 		ret = 0;
 		//log write buf is full.
 	}
+	LeaveCriticalSection(&pSerial->csCommunicationSync);
 
 	return ret;
 }
@@ -503,6 +508,7 @@ unsigned long __stdcall CSerial_Loop(void* pData)
 				// the higest priority and be serviced first.
 				// Kill this thread.
 			 	pSerial->cBase->bThreadRun = 0;
+				ResetEvent(pSerial->hShutdownEvent);
 		
 				break;
 			}

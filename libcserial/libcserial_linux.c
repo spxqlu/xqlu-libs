@@ -4,12 +4,11 @@
 #ifndef AE_WINDOWS
 
 
-
 _PCSerial* CSerial_Init(_PCSerial *pSerial)
 {
 	_PCSerial *p = pSerial;
 
-	pSerial->fd = -1;
+	pSerial->fd     = -1;
 	p->cBase->mode  = CMODE_SYN;
 	p->cBase->state = CSTATE_OFF;
 
@@ -29,7 +28,7 @@ int  CSerial_Init_Port(_PCSerial *pSerial)
            
     struct termios options;  
        
-    if( tcgetattr( fd, &options ) != 0 ){  
+    if( tcgetattr( pSerial->fd, &options ) != 0 ){  
          perror("get com opthons failed. \n");      
          return CRET_ERR;   
     }  
@@ -133,10 +132,10 @@ int  CSerial_Init_Port(_PCSerial *pSerial)
     options.c_cc[VMIN] = 1; /* 读取字符的最少个数为1 */  
      
     //如果发生数据溢出，接收数据，但是不再读取 刷新收到的数据，但是不读  
-    tcflush(fd,TCIFLUSH);  
+    tcflush(pSerial->fd,TCIFLUSH);  
      
     //Active configuration. (set termios data configuration which be changed.)  
-    if (tcsetattr(fd,TCSANOW,&options) != 0){  
+    if (tcsetattr(pSerial->fd,TCSANOW,&options) != 0){  
         perror("com set options error! \n");    
         return CRET_ERR;   
     }  
@@ -148,7 +147,7 @@ int  CSerial_Init_Port(_PCSerial *pSerial)
 int  CSerial_Open_Port(_PCSerial *pSerial)
 {
 	pSerial->fd = open( pSerial->cBase->port, O_RDWR|O_NOCTTY|O_NDELAY);  
-	if ( 0 == pSerial->fd )  {  
+	if ( -1 == pSerial->fd )  {  
 		perror("open serial port failed. \n");  
 		return CRET_ERR;  
 	}  
@@ -165,7 +164,12 @@ int  CSerial_Open_Port(_PCSerial *pSerial)
 	else  {  
 		printf("isatty success!\n");  
 	}
-	
+
+	if( CRET_ERR == CSerial_Init_Port(pSerial) ){
+		pSerial->cBase->state = CSTATE_OFF;
+		return CRET_ERR;
+	}
+	pSerial->cBase->state = CSTATE_ON;	
 	if( CMODE_ASY == pSerial->cBase->mode ){
 		if( !Ae_Thread_Start(&pSerial->cBase->hThread, NULL,CSerial_Loop,pSerial) ){
 			pSerial->cBase->state = CSTATE_OFF;
@@ -185,12 +189,16 @@ void CSerial_Destroy_Port(_PCSerial *pSerial)
 
 int CSerial_Write_Char(_PCSerial* pSerial, char* buf, int size)
 {
-	int len = write(pSerial->fd, buf, size);  
+	int len = 0;
+	if( pSerial->fd < 0 ){
+		return 0;
+	}
+	len = write(pSerial->fd, buf, size);  
     if( len == size )  {  
 		return len;  
 	}       
     else{  
-		tcflush(fd,TCOFLUSH);  
+		tcflush(pSerial->fd,TCOFLUSH);  
 		return CRET_ERR; 
 	}  
 }
@@ -200,9 +208,13 @@ int CSerial_Read_Char(_PCSerial* pSerial, char* buf, int size)
 	int len = 0, ret = 0;  
     fd_set rFs; 
     struct timeval ts;  
+
+	if( pSerial->fd < 0 ){
+		return 0;
+	}
 	
     FD_ZERO(&rFs);  
-    FD_SET(fd,&rFs);  
+    FD_SET(pSerial->fd,&rFs);  
 	
     ts.tv_sec  = 3;  
     ts.tv_usec = 0;  
@@ -241,7 +253,7 @@ void* CSerial_Loop(void* pData)
 {
 	_PCSerial *pSerial = (_PCSerial*)pData;
 
-	if( !pSerial || pSerial->fd < 1 ){
+	if( !pSerial || pSerial->fd < 0 ){
 		return 0;
 	}
 
@@ -253,6 +265,7 @@ void* CSerial_Loop(void* pData)
 			//log data
 		}
     }
+	pSerial->cBase->state = CSTATE_OFF;
 	
 	return 0;
 }

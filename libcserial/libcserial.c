@@ -2,15 +2,6 @@
 
 #include "libinclude.h"
 
-void main()
-{
-	
-}
-
-
-
-
-
 
 static void CSerial_Base_Destroy(_PCBase *pBase)
 {
@@ -158,9 +149,13 @@ int CSerial_Set_Destroy_CallBack(_PCSerial* pSerial, CSDestroyUserDataCb func)
 
 int CSerial_Open(_PCSerial* pSerial)
 {
+#ifdef AE_WINDOWS
 	if( CSerial_Init_Port(pSerial) ){
 		return CSerial_Open_Port(pSerial);
 	}
+#else
+	return CSerial_Open_Port(pSerial);
+#endif
 	
 	return (pSerial->cBase->state = CSTATE_OFF);
 }
@@ -174,17 +169,26 @@ int CSerial_Close(_PCSerial* pSerial)
 {
 #ifdef AE_WINDOWS
 	if ( pSerial->cBase->bThreadRun ){
-		do
-		{
+		do{
 			SetEvent(pSerial->hShutdownEvent);
+			AE_SLEEP(1);
 		} while (pSerial->cBase->bThreadRun);
 	}
+	CloseHandle(pSerial->cBase->hThread);
 	CloseHandle(pSerial->hComm);
 
 #else
 	pSerial->cBase->bThreadRun = 0;
-	close(pSerial->fd);
+	while(  CSTATE_ON == pSerial->cBase->state ){
+		AE_SLEEP(1);
+	}
+	if( pSerial->fd >= 0 ){
+		close(pSerial->fd);
+	}
+	close(pSerial->cBase->hThread);
 #endif
+
+	pSerial->cBase->state = CSTATE_OFF;
 
 	return 1;
 }

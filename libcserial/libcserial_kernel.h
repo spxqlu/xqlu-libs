@@ -12,16 +12,15 @@
 #define  BUF_512B	512
 #define  BUF_1K		1024 
 #define  BUF_4K		4096
-#define  BUF_16k	16384
+#define  BUF_16K	16384
 #define  BUF_32K	32768
-#define  BUF_64k	65536
+#define  BUF_64K	65536
 
 struct CSerialPort;
 
 typedef struct CBaseSerial _PCBase;
-
-typedef void (*CSProcCb)(struct CSerialPort* pSerial, char ch);
-typedef void (*CSDestroyUserDataCb)(void *pUserData);
+typedef void (*_CSProcCb)(struct CSerialPort* pSerial, char ch);
+typedef void (*_CSDestroyUserDataCb)(void *pUserData);
 
 struct CBaseSerial
 {
@@ -41,7 +40,7 @@ struct CBaseSerial
 	
 	char    chReadBuf[BUF_4K];
 	int		readBufCount;
-	char    chWriteBuf[BUF_1K];
+	char    chWriteBuf[BUF_4K];
 	int     writeBufCount;
 	char    chConfBuf[BUF_256B];
 	int     confBufCount;
@@ -50,8 +49,8 @@ struct CBaseSerial
 	AE_THREAD_HANDLE   hThread;
 	
 	void    *userData;
-	CSDestroyUserDataCb  CSerial_Destroy_UserData;
-	CSProcCb  CSerial_Proc_Char;
+	_CSDestroyUserDataCb  CSerial_Destroy_UserData;
+	_CSProcCb  CSerial_Proc_Char;
 };
 
 
