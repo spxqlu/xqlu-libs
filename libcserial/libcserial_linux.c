@@ -33,7 +33,7 @@ int  CSerial_Init_Port(_PCSerial *pSerial)
          return CRET_ERR;   
     }  
     
-    //ÉèÖÃ´®¿ÚÊäÈë²¨ÌØÂÊºÍÊä³ö²¨ÌØÂÊ  
+    //è®¾ç½®ä¸²å£è¾“å…¥æ³¢ç‰¹ç‡å’Œè¾“å‡ºæ³¢ç‰¹ç‡  
     for ( i= 0; i < sizeof(speeds) / sizeof(int); i++){  
          if (pSerial->cBase->baudRate == names[i]){               
                cfsetispeed(&options, speeds[i]);   
@@ -41,27 +41,27 @@ int  CSerial_Init_Port(_PCSerial *pSerial)
          }  
     }       
      
-    //ĞŞ¸Ä¿ØÖÆÄ£Ê½£¬±£Ö¤³ÌĞò²»»áÕ¼ÓÃ´®¿Ú  
+    //ä¿®æ”¹æ§åˆ¶æ¨¡å¼ï¼Œä¿è¯ç¨‹åºä¸ä¼šå ç”¨ä¸²å£  
     options.c_cflag |= CLOCAL;  
-    //ĞŞ¸Ä¿ØÖÆÄ£Ê½£¬Ê¹µÃÄÜ¹»´Ó´®¿ÚÖĞ¶ÁÈ¡ÊäÈëÊı¾İ  
+    //ä¿®æ”¹æ§åˆ¶æ¨¡å¼ï¼Œä½¿å¾—èƒ½å¤Ÿä»ä¸²å£ä¸­è¯»å–è¾“å…¥æ•°æ®  
     options.c_cflag |= CREAD;  
     
-    //ÉèÖÃÊı¾İÁ÷¿ØÖÆ
+    //è®¾ç½®æ•°æ®æµæ§åˆ¶
     switch(pSerial->cBase->fCtrl) 
     {  
-       case 0 ://²»Ê¹ÓÃÁ÷¿ØÖÆ  
+       case 0 ://ä¸ä½¿ç”¨æµæ§åˆ¶  
               options.c_cflag &= ~CRTSCTS;  
               break;     
         
-       case 1 ://Ê¹ÓÃÓ²¼şÁ÷¿ØÖÆ  
+       case 1 ://ä½¿ç”¨ç¡¬ä»¶æµæ§åˆ¶  
               options.c_cflag |= CRTSCTS;  
               break;  
-       case 2 ://Ê¹ÓÃÈí¼şÁ÷¿ØÖÆ  
+       case 2 ://ä½¿ç”¨è½¯ä»¶æµæ§åˆ¶  
               options.c_cflag |= IXON | IXOFF | IXANY;  
               break;  
     }  
-    //ÉèÖÃÊı¾İÎ»  
-    //ÆÁ±ÎÆäËû±êÖ¾Î»  
+    //è®¾ç½®æ•°æ®ä½  
+    //å±è”½å…¶ä»–æ ‡å¿—ä½  
     options.c_cflag &= ~CSIZE;  
     switch (pSerial->cBase->dataBit)  
     {    
@@ -81,27 +81,27 @@ int  CSerial_Init_Port(_PCSerial *pSerial)
               fprintf(stderr,"unsupported data size.\n");  
               return CRET_ERR;   
     }  
-    //ÉèÖÃĞ£ÑéÎ»  
+    //è®¾ç½®æ ¡éªŒä½  
     switch (pSerial->cBase->parity)  
     {    
        case 'n':  
-       case 'N': //ÎŞÆæÅ¼Ğ£ÑéÎ»¡£  
+       case 'N': //æ— å¥‡å¶æ ¡éªŒä½ã€‚  
                  options.c_cflag &= ~PARENB;   
                  options.c_iflag &= ~INPCK;      
                  break;   
        case 'o':    
-       case 'O'://ÉèÖÃÎªÆæĞ£Ñé      
+       case 'O'://è®¾ç½®ä¸ºå¥‡æ ¡éªŒ      
                  options.c_cflag |= (PARODD | PARENB);   
                  options.c_iflag |= INPCK;               
                  break;   
        case 'e':   
-       case 'E'://ÉèÖÃÎªÅ¼Ğ£Ñé    
+       case 'E'://è®¾ç½®ä¸ºå¶æ ¡éªŒ    
                  options.c_cflag |= PARENB;         
                  options.c_cflag &= ~PARODD;         
                  options.c_iflag |= INPCK;        
                  break;  
        case 's':  
-       case 'S': //ÉèÖÃÎª¿Õ¸ñ   
+       case 'S': //è®¾ç½®ä¸ºç©ºæ ¼   
                  options.c_cflag &= ~PARENB;  
                  options.c_cflag &= ~CSTOPB;  
                  break;   
@@ -109,7 +109,7 @@ int  CSerial_Init_Port(_PCSerial *pSerial)
                  fprintf(stderr,"unsupported parity. \n");      
                  return CRET_ERR;   
     }   
-    // ÉèÖÃÍ£Ö¹Î»   
+    // è®¾ç½®åœæ­¢ä½   
     switch (pSerial->cBase->stopBit)  
     {    
        case 1 :     
@@ -121,17 +121,17 @@ int  CSerial_Init_Port(_PCSerial *pSerial)
                 return CRET_ERR;  
     }  
      
-    //ĞŞ¸ÄÊä³öÄ£Ê½£¬Ô­Ê¼Êı¾İÊä³ö  
+    //ä¿®æ”¹è¾“å‡ºæ¨¡å¼ï¼ŒåŸå§‹æ•°æ®è¾“å‡º  
     options.c_oflag &= ~OPOST;  
     
-    options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);//ÎÒ¼ÓµÄ  
+    options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); 
     //options.c_lflag &= ~(ISIG | ICANON);  
      
-    //ÉèÖÃµÈ´ıÊ±¼äºÍ×îĞ¡½ÓÊÕ×Ö·û  
-    options.c_cc[VTIME] = 1; /* ¶ÁÈ¡Ò»¸ö×Ö·ûµÈ´ı1*(1/10)s */    
-    options.c_cc[VMIN] = 1; /* ¶ÁÈ¡×Ö·ûµÄ×îÉÙ¸öÊıÎª1 */  
+    //è®¾ç½®ç­‰å¾…æ—¶é—´å’Œæœ€å°æ¥æ”¶å­—ç¬¦  
+    options.c_cc[VTIME] = 1; /* è¯»å–ä¸€ä¸ªå­—ç¬¦ç­‰å¾…1*(1/10)s */    
+    options.c_cc[VMIN] = 1; /* è¯»å–å­—ç¬¦çš„æœ€å°‘ä¸ªæ•°ä¸º1 */  
      
-    //Èç¹û·¢ÉúÊı¾İÒç³ö£¬½ÓÊÕÊı¾İ£¬µ«ÊÇ²»ÔÙ¶ÁÈ¡ Ë¢ĞÂÊÕµ½µÄÊı¾İ£¬µ«ÊÇ²»¶Á  
+    //å¦‚æœå‘ç”Ÿæ•°æ®æº¢å‡ºï¼Œæ¥æ”¶æ•°æ®ï¼Œä½†æ˜¯ä¸å†è¯»å– åˆ·æ–°æ”¶åˆ°çš„æ•°æ®ï¼Œä½†æ˜¯ä¸è¯»  
     tcflush(pSerial->fd,TCIFLUSH);  
      
     //Active configuration. (set termios data configuration which be changed.)  
@@ -151,12 +151,12 @@ int  CSerial_Open_Port(_PCSerial *pSerial)
 		perror("open serial port failed. \n");  
 		return CRET_ERR;  
 	}  
-	//»Ö¸´´®¿ÚÎª×èÈû×´Ì¬                                 
+	//æ¢å¤ä¸²å£ä¸ºé˜»å¡çŠ¶æ€                                 
 	if( fcntl(pSerial->fd, F_SETFL, 0) < 0 )  {  
 		printf("fcntl failed! \n");  
 		return CRET_ERR;  
 	}
-	//²âÊÔÊÇ·ñÎªÖÕ¶ËÉè±¸      
+	//æµ‹è¯•æ˜¯å¦ä¸ºç»ˆç«¯è®¾å¤‡      
 	if( 0 == isatty(STDIN_FILENO) ) {  
 		printf("standard input is not a terminal device\n");  
 		return CRET_ERR;  
