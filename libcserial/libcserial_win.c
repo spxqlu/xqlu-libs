@@ -351,11 +351,6 @@ int  CSerial_Write_Char(_PCSerial *pSerial)
 					LeaveCriticalSection(&pSerial->csCommunicationSync);
 				}
 			}
-
-			if( pSerial->cBase->writeBufCount > BUF_4K - BUF_256B ){
-				memset(pSerial->cBase->chWriteBuf, 0, BUF_4K);	
-				pSerial->cBase->writeBufCount = 0;
-			}
 		} 
 		
 		memset(pSerial->cBase->chWriteBuf, 0, BUF_4K);	
@@ -388,7 +383,6 @@ int CSerial_Write_Asy(_PCSerial* pSerial, char* buf, unsigned int size)
 {
 	int ret = 1;
 
-	EnterCriticalSection(&pSerial->csCommunicationSync);
 	if( size > BUF_4K - BUF_32B ){
 		//log write data is too long
 		ret = 0;
@@ -404,7 +398,6 @@ int CSerial_Write_Asy(_PCSerial* pSerial, char* buf, unsigned int size)
 		ret = 0;
 		//log write buf is full.
 	}
-	LeaveCriticalSection(&pSerial->csCommunicationSync);
 
 	return ret;
 }
