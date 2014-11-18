@@ -181,7 +181,7 @@ int CSerial_Close(_PCSerial* pSerial)
 	while(  CSTATE_ON == pSerial->cBase->state ){
 		AE_SLEEP(1);
 	}
-	if( pSerial->fd >= 0 ){
+	if( pSerial->fd > 0 ){
 		close(pSerial->fd);
 	}
 	pSerial->fd = -1;
