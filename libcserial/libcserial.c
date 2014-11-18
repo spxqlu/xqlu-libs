@@ -174,8 +174,10 @@ int CSerial_Close(_PCSerial* pSerial)
 			AE_SLEEP(1);
 		} while (pSerial->cBase->bThreadRun);
 	}
-	CloseHandle(pSerial->hComm);
-
+	if( pSerial->hComm != INVALID_HANDLE_VALUE ){
+		CloseHandle(pSerial->hComm);
+	}
+	pSerial->hComm = INVALID_HANDLE_VALUE;
 #else
 	pSerial->cBase->bThreadRun = 0;
 	while(  CSTATE_ON == pSerial->cBase->state ){

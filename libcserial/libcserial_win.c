@@ -23,6 +23,7 @@
 
 	p->cBase->mode  = CMODE_SYN;
 	p->cBase->state = CSTATE_OFF;
+	p->hComm        = INVALID_HANDLE_VALUE;
 
 	return p;
 }
