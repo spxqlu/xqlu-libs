@@ -37,7 +37,8 @@ int  CSerial_Init_Port(_PCSerial *pSerial)
     for ( i= 0; i < sizeof(speeds) / sizeof(int); i++){  
          if (pSerial->cBase->baudRate == names[i]){               
                cfsetispeed(&options, speeds[i]);   
-               cfsetospeed(&options, speeds[i]);    
+               cfsetospeed(&options, speeds[i]);   
+			   break;
          }  
     }       
      

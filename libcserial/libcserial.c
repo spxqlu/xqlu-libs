@@ -174,7 +174,6 @@ int CSerial_Close(_PCSerial* pSerial)
 			AE_SLEEP(1);
 		} while (pSerial->cBase->bThreadRun);
 	}
-	CloseHandle(pSerial->cBase->hThread);
 	CloseHandle(pSerial->hComm);
 
 #else
@@ -185,8 +184,13 @@ int CSerial_Close(_PCSerial* pSerial)
 	if( pSerial->fd >= 0 ){
 		close(pSerial->fd);
 	}
-	close(pSerial->cBase->hThread);
+	pSerial->fd = -1;
 #endif
+
+	if( pSerial->cBase->hThread ){
+		Ae_Thread_Wait(&pSerial->cBase->hThread);
+		Ae_Thread_Destroy(&pSerial->cBase->hThread);
+	}
 
 	pSerial->cBase->state = CSTATE_OFF;
 
