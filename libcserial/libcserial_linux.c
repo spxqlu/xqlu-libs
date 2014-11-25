@@ -1,5 +1,5 @@
 
-#include "libinclude.h"
+#include "../libinclude.h"
 
 #ifndef AE_WINDOWS
 
@@ -150,7 +150,7 @@ int  CSerial_Open_Port(_PCSerial *pSerial)
 	pSerial->fd = open( pSerial->cBase->port, O_RDWR|O_NOCTTY|O_NDELAY);  
 	if ( -1 == pSerial->fd )  {  
 		perror("open serial port failed. \n");  
-		return CRET_ERR;  
+		return CRET_ERR; 
 	}  
 	//»Ö¸´´®¿ÚÎª×èÈû×´Ì¬                                 
 	if( fcntl(pSerial->fd, F_SETFL, 0) < 0 )  {  

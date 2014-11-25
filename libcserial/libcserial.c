@@ -1,6 +1,6 @@
 
 
-#include "libinclude.h"
+#include "../libinclude.h"
 
 
 static void CSerial_Base_Destroy(_PCBase *pBase)
@@ -183,14 +183,14 @@ int CSerial_Close(_PCSerial* pSerial)
 	while(  CSTATE_ON == pSerial->cBase->state ){
 		AE_SLEEP(1);
 	}
-	if( pSerial->fd > 0 ){
+	if( pSerial->fd >= 0 ){
 		close(pSerial->fd);
 	}
 	pSerial->fd = -1;
 #endif
 
 	if( pSerial->cBase->hThread ){
-		Ae_Thread_Wait(&pSerial->cBase->hThread);
+		Ae_Thread_Wait(pSerial->cBase->hThread);
 		Ae_Thread_Destroy(&pSerial->cBase->hThread);
 	}
 

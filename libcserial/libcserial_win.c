@@ -1,5 +1,5 @@
 
-#include "libinclude.h"
+#include "../libinclude.h"
 
 #ifdef AE_WINDOWS
 
